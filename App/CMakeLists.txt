@@ -16,4 +16,5 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/IMU
         ${CMAKE_CURRENT_SOURCE_DIR}/Algorithm
         ${CMAKE_CURRENT_SOURCE_DIR}/ADC
+        ${CMAKE_CURRENT_SOURCE_DIR}/Motion
 )
