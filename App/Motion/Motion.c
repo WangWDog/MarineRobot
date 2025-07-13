@@ -155,3 +155,13 @@ void motor_driver(uint8_t id,float rate)
 		}
 }
 
+
+// 统一电机控制函数：根据结构体输入的 8 路占空比统一设置电机
+void motor_pwm_output(const MotorPWMCommand_t* pwm_cmd)
+{
+	if (pwm_cmd == NULL) return;
+
+	for (uint8_t i = 0; i < 8; i++) {
+		motor_driver(i + 1, pwm_cmd->motor_pwm[i]);  // 电机编号从1开始
+	}
+}
