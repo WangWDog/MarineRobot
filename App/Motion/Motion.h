@@ -10,4 +10,12 @@ void motor_pwm_init(void);
 void motor_driver(uint8_t id, float rate);
 void motion_task(void const * argument);
 
+typedef struct {
+    float motor_pwm[8];
+} MotorPWMCommand_t;
+
+void motor_pwm_init(void);
+void motor_driver(uint8_t id, float rate);
+void motor_pwm_output(const MotorPWMCommand_t* pwm_cmd); // 新加：电机整体输出控制函数
+void motion_task(void const * argument);
 #endif //MOTION_H

@@ -7,6 +7,7 @@
 #include "BMI088driver.h"
 #include "cmsis_os.h"
 #include "MahonyAHRS.h"
+#include "Motion.h"
 imu_struct imu_data;//陀螺仪角度接口
 
 #define DES_TEMP    40.0f
@@ -61,4 +62,14 @@ void imu_task(void const * argument)
     }
 
 }
+// 统一电机控制函数：根据结构体输入的 8 路占空比统一设置电机
+void motor_pwm_output(const MotorPWMCommand_t* pwm_cmd)
+{
+    if (pwm_cmd == NULL) return;
+
+    for (uint8_t i = 0; i < 8; i++) {
+        motor_driver(i + 1, pwm_cmd->motor_pwm[i]);  // 电机编号从1开始
+    }
+}
+
 
