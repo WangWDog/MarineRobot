@@ -16,6 +16,9 @@
   */
 
 #include "pid.h"
+
+#include <stdlib.h>
+
 #include "main.h"
 
 #define LimitMax(input, max)   \
