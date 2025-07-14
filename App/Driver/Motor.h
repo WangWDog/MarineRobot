@@ -23,7 +23,7 @@ typedef enum  {
     Middle_Right = 5,
     Middle_Left = 6,
 } MotorMatrix;
-
+void motor_driver(MotorMatrix id, uint8_t input);
 void motor_pwm_init(void);
 // void motor_driver(uint8_t id, float rate);
 void motor_pwm_output(const MotorPWMCommand_t* pwm_cmd); // 新加：电机整体输出控制函数

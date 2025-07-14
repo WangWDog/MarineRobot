@@ -1,7 +1,7 @@
 #include "motion.h"
 #include "pid.h"
 #include "imu_task.h"
-#include "motor.h"
+#include "Motor.h"
 #include "cmsis_os.h"
 #include <string.h>
 #include <math.h>
@@ -107,27 +107,36 @@ void compute_motor_output(MotorPWMCommand_t* cmd, float x, float y,
 void motion_task(void const * argument)
 {
     motor_pwm_init();
-
-    PID_init(&pid_roll, PID_POSITION, roll_param, 30.0f, 5.0f);
-    PID_init(&pid_pitch, PID_POSITION, pitch_param, 30.0f, 5.0f);
-    PID_init(&pid_yaw, PID_POSITION, yaw_param, 50.0f, 10.0f);
-
+    // PID_init(&pid_roll, PID_POSITION, roll_param, 30.0f, 5.0f);
+    // PID_init(&pid_pitch, PID_POSITION, pitch_param, 30.0f, 5.0f);
+    // PID_init(&pid_yaw, PID_POSITION, yaw_param, 50.0f, 10.0f);
+    //
     while (1)
     {
-        float yaw, pitch, roll;
-        if (imu_get_euler(&yaw, &pitch, &roll))
-        {
-            float roll_out  = PID_calc(&pid_roll, roll, 0.0f);
-            float pitch_out = PID_calc(&pid_pitch, pitch, target_pitch);
-            float yaw_out   = Boat_Angle_PID_calc(&pid_yaw, yaw, target_yaw);
+    //     float yaw, pitch, roll;
+    //     if (imu_get_euler(&yaw, &pitch, &roll))
+    //     {
+    //         float roll_out  = PID_calc(&pid_roll, roll, 0.0f);
+    //         float pitch_out = PID_calc(&pid_pitch, pitch, target_pitch);
+    //         float yaw_out   = Boat_Angle_PID_calc(&pid_yaw, yaw, target_yaw);
+    //
+    //         MotorPWMCommand_t pwm_cmd;
+    //         compute_motor_output(&pwm_cmd, target_x, target_y, roll_out, pitch_out, yaw_out);
+    //         motor_pwm_output(&pwm_cmd);
+    //
+    //         z_thrust = 0.0f;  // 每轮复位浮沉指令，防止持续下沉或上浮
+    //     }
+    //+
+    // motor_driver(Middle_Right,20);
+    // motor_driver(Middle_Left,20);
+    // motor_driver(Back_Left,20);
+    // motor_driver(Back_Right,20);
+    // motor_driver(Front_Right,20);
+    // motor_driver(Front_Left,20);
+    // motor_driver(100,20);
 
-            MotorPWMCommand_t pwm_cmd;
-            compute_motor_output(&pwm_cmd, target_x, target_y, roll_out, pitch_out, yaw_out);
-            motor_pwm_output(&pwm_cmd);
 
-            z_thrust = 0.0f;  // 每轮复位浮沉指令，防止持续下沉或上浮
-        }
 
-        osDelay(10);  // 100Hz 控制周期
+    osDelay(10);  // 100Hz 控制周期
     }
 }

@@ -55,17 +55,17 @@ void imu_task(void const * argument)
     {
         osDelay(100);
     }
-    imu_mutexHandle = osMutexCreate(osMutex(imu_mutex)); // 创建互斥锁
+    // imu_mutexHandle = osMutexCreate(osMutex(imu_mutex)); // 创建互斥锁
 
     AHRS_init(imuQuat);
     /* Infinite loop */
     for(;;)
     {
-        osMutexWait(imu_mutexHandle, osWaitForever); // 加锁
+        // osMutexWait(imu_mutexHandle, osWaitForever); // 加锁
         BMI088_read(imu_data.gyro, imu_data.acc, &imu_data.temp);
         AHRS_update(imuQuat,imu_data.gyro,imu_data.acc);
         GetAngle(imuQuat, imu_data.imuAngle + INS_YAW_ADDRESS_OFFSET, imu_data.imuAngle + INS_PITCH_ADDRESS_OFFSET, imu_data.imuAngle + INS_ROLL_ADDRESS_OFFSET);
-        osMutexRelease(imu_mutexHandle);  // 🔓解锁（其他任务现在可以安全读取）
+        // osMutexRelease(imu_mutexHandle);  // 🔓解锁（其他任务现在可以安全读取）
         osDelay(1);
     }
 

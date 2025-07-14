@@ -113,13 +113,16 @@ void motor_driver(MotorMatrix id, uint8_t input)
 			set_motor_pwm(&htim4, TIM_CHANNEL_2, &htim4, TIM_CHANNEL_1, speed_rate);
 			break;
 		case Middle_Right:
-			set_motor_pwm(&htim1, TIM_CHANNEL_1, &htim3, TIM_CHANNEL_1, speed_rate);
+			set_motor_pwm(&htim1, TIM_CHANNEL_2, &htim1, TIM_CHANNEL_3, speed_rate);
 			break;
 		case Middle_Left:
-			set_motor_pwm(&htim2, TIM_CHANNEL_4, &htim2, TIM_CHANNEL_1, speed_rate);
+			set_motor_pwm(&htim1, TIM_CHANNEL_4, &htim2, TIM_CHANNEL_3, speed_rate);
 			break;
 		default:
 			// 非法ID忽略或可加入报警
+			// set_motor_pwm(&htim1, TIM_CHANNEL_2, &htim1, TIM_CHANNEL_3, speed_rate);
+			// set_motor_pwm(&htim1, TIM_CHANNEL_4, &htim2, TIM_CHANNEL_3, speed_rate);
+
 			break;
 	}
 }
