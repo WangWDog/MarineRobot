@@ -5,9 +5,11 @@
 #ifndef MOTION_H
 #define MOTION_H
 #include <stdint.h>
-
+#define MAX_PWM 12000
+#define DEADZONE_MIN 125
+#define DEADZONE_MAX 129
 void motor_pwm_init(void);
-void motor_driver(uint8_t id, float rate);
+// void motor_driver(uint8_t id, float rate);
 void motion_task(void const * argument);
 
 typedef struct {
@@ -15,7 +17,7 @@ typedef struct {
 } MotorPWMCommand_t;
 
 void motor_pwm_init(void);
-void motor_driver(uint8_t id, float rate);
+// void motor_driver(uint8_t id, float rate);
 void motor_pwm_output(const MotorPWMCommand_t* pwm_cmd); // 新加：电机整体输出控制函数
 void motion_task(void const * argument);
 #endif //MOTION_H
