@@ -33,14 +33,6 @@ float BMI088_GYRO_SEN = BMI088_GYRO_2000_SEN;
 * @details:    	通过BMI088加速度计的SPI总线读取单个寄存器的宏定义
 ************************************************************************
 **/
-#define BMI088_accel_read_single_reg(reg, data) \
-    {                                           \
-        BMI088_ACCEL_NS_L();                    \
-        BMI088_read_write_byte((reg) | 0x80);   \
-        BMI088_read_write_byte(0x55);           \
-        (data) = BMI088_read_write_byte(0x55);  \
-        BMI088_ACCEL_NS_H();                    \
-    }
 /**
 ************************************************************************
 * @brief:      	BMI088_accel_read_muli_reg(reg, data, len)
@@ -106,6 +98,14 @@ float BMI088_GYRO_SEN = BMI088_GYRO_2000_SEN;
     }
 
 static void BMI088_write_single_reg(uint8_t reg, uint8_t data);
+static inline void BMI088_accel_read_single_reg(uint8_t reg, uint8_t *data)
+{
+    BMI088_ACCEL_NS_L();
+    BMI088_read_write_byte(reg | 0x80);
+    BMI088_read_write_byte(0x55);  // dummy byte
+    *data = BMI088_read_write_byte(0x55);
+    BMI088_ACCEL_NS_H();
+}
 static void BMI088_read_single_reg(uint8_t reg, uint8_t *return_data);
 //static void BMI088_write_muli_reg(uint8_t reg, uint8_t* buf, uint8_t len );
 static void BMI088_read_muli_reg(uint8_t reg, uint8_t *buf, uint8_t len);
@@ -184,9 +184,9 @@ uint8_t bmi088_accel_init(void)
     uint8_t write_reg_num = 0;
 
     //check commiunication
-    BMI088_accel_read_single_reg(BMI088_ACC_CHIP_ID, res);
+    BMI088_accel_read_single_reg(BMI088_ACC_CHIP_ID, &res);
     BMI088_delay_us(BMI088_COM_WAIT_SENSOR_TIME);
-    BMI088_accel_read_single_reg(BMI088_ACC_CHIP_ID, res);
+    BMI088_accel_read_single_reg(BMI088_ACC_CHIP_ID, &res);
     BMI088_delay_us(BMI088_COM_WAIT_SENSOR_TIME);
 
     //accel software reset
@@ -194,9 +194,9 @@ uint8_t bmi088_accel_init(void)
     BMI088_delay_ms(BMI088_LONG_DELAY_TIME);
 
     //check commiunication is normal after reset
-    BMI088_accel_read_single_reg(BMI088_ACC_CHIP_ID, res);
+    BMI088_accel_read_single_reg(BMI088_ACC_CHIP_ID, &res);
     BMI088_delay_us(BMI088_COM_WAIT_SENSOR_TIME);
-    BMI088_accel_read_single_reg(BMI088_ACC_CHIP_ID, res);
+    BMI088_accel_read_single_reg(BMI088_ACC_CHIP_ID, &res);
     BMI088_delay_us(BMI088_COM_WAIT_SENSOR_TIME);
 
     // check the "who am I"
@@ -212,7 +212,7 @@ uint8_t bmi088_accel_init(void)
         BMI088_accel_write_single_reg(write_BMI088_accel_reg_data_error[write_reg_num][0], write_BMI088_accel_reg_data_error[write_reg_num][1]);
         BMI088_delay_us(BMI088_COM_WAIT_SENSOR_TIME);
 
-        BMI088_accel_read_single_reg(write_BMI088_accel_reg_data_error[write_reg_num][0], res);
+        BMI088_accel_read_single_reg(write_BMI088_accel_reg_data_error[write_reg_num][0], &res);
         BMI088_delay_us(BMI088_COM_WAIT_SENSOR_TIME);
 
         if (res != write_BMI088_accel_reg_data_error[write_reg_num][1])

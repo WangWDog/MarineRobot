@@ -1,9 +1,11 @@
 #include "sht30.h"
 /* ADDR Pin Conect to VSS */
+#include <stdio.h>
+
  #include "i2c.h"
  #include "cmsis_os.h"
  
- float g_temperature = 0.0f;
+float g_temperature = 0.0f;
 float g_humidity = 0.0f;
 static uint8_t sht30_data[6] = {0};
 
@@ -163,10 +165,12 @@ void sht30_task(void *argument)
 {
     // 初始化传感器
     SHT30_Reset();
-    if (SHT30_Init() != HAL_OK)
-    {
-//        printf("SHT30 init failed!\r\n");
-    }
+//     if (SHT30_Init() != HAL_OK)
+//     {
+// //        printf("SHT30 init failed!\r\n");
+//     }
+    int a = SHT30_Init();
+    printf(a);
     // 循环读取数据
     while (1)
     {

@@ -15,6 +15,14 @@ void motion_task(void const * argument);
 typedef struct {
     float motor_pwm[8];
 } MotorPWMCommand_t;
+typedef enum  {
+    Back_Right = 1,
+    Front_Right = 2,
+    Front_Left = 3,
+    Back_Left = 4,
+    Middle_Right = 5,
+    Middle_Left = 6,
+} MotorMatrix;
 
 void motor_pwm_init(void);
 // void motor_driver(uint8_t id, float rate);

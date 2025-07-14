@@ -89,7 +89,7 @@ static void set_motor_pwm(TIM_HandleTypeDef *htim_pos, uint32_t ch_pos,
 }
 
 // 电机驱动函数（输入为uint8_t，支持死区）
-void motor_driver(uint8_t id, uint8_t input)
+void motor_driver(MotorMatrix id, uint8_t input)
 {
 	float speed_rate = 0.0f;
 
@@ -100,29 +100,23 @@ void motor_driver(uint8_t id, uint8_t input)
 
 	switch (id)
 	{
-		case 1:
+		case Back_Right:
 			set_motor_pwm(&htim2, TIM_CHANNEL_2, &htim3, TIM_CHANNEL_4, speed_rate);
 			break;
-		case 2:
+		case Front_Right:
 			set_motor_pwm(&htim3, TIM_CHANNEL_3, &htim3, TIM_CHANNEL_2, speed_rate);
 			break;
-		case 3:
+		case Front_Left:
 			set_motor_pwm(&htim4, TIM_CHANNEL_4, &htim4, TIM_CHANNEL_3, speed_rate);
 			break;
-		case 4:
+		case Back_Left:
 			set_motor_pwm(&htim4, TIM_CHANNEL_2, &htim4, TIM_CHANNEL_1, speed_rate);
 			break;
-		case 5:
+		case Middle_Right:
 			set_motor_pwm(&htim1, TIM_CHANNEL_1, &htim3, TIM_CHANNEL_1, speed_rate);
 			break;
-		case 6:
+		case Middle_Left:
 			set_motor_pwm(&htim2, TIM_CHANNEL_4, &htim2, TIM_CHANNEL_1, speed_rate);
-			break;
-		case 7:
-			set_motor_pwm(&htim2, TIM_CHANNEL_3, &htim1, TIM_CHANNEL_4, speed_rate);
-			break;
-		case 8:
-			set_motor_pwm(&htim1, TIM_CHANNEL_3, &htim1, TIM_CHANNEL_2, speed_rate);
 			break;
 		default:
 			// 非法ID忽略或可加入报警
@@ -144,7 +138,6 @@ void motor_pwm_output(const MotorPWMCommand_t* pwm_cmd)
 void motion_task(void const * argument)
 {
 	motor_pwm_init();
-
 	for (;;)
 	{
 		// TODO: 这里可以添加运动控制逻辑
