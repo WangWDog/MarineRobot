@@ -2,7 +2,7 @@
 // Created by 大口大口喝拿铁 on 25-7-12.
 //
 
-#include "../Motion/Motion.h"
+#include "Motor.h"
 #include "tim.h"
 #include "stm32h7xx_hal.h"
 #include "cmsis_os.h"
@@ -131,16 +131,5 @@ void motor_pwm_output(const MotorPWMCommand_t* pwm_cmd)
 
 	for (uint8_t i = 0; i < 8; i++) {
 		motor_driver(i + 1, pwm_cmd->motor_pwm[i]);  // 电机编号从1开始
-	}
-}
-
-// RTOS中的电机任务（初始化+主循环）
-void motion_task(void const * argument)
-{
-	motor_pwm_init();
-	for (;;)
-	{
-		// TODO: 这里可以添加运动控制逻辑
-		osDelay(10);  // 10ms控制周期
 	}
 }
