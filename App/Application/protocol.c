@@ -1,5 +1,5 @@
 #include "protocol.h"
-#include "motion.h"     // 控制模块接口：你需实现它
+#include "../Driver/Motor.h"
 
 #include <string.h>
 

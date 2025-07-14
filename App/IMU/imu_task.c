@@ -9,7 +9,7 @@
 #include "BMI088driver.h"
 #include "cmsis_os.h"
 #include "MahonyAHRS.h"
-#include "Motion.h"
+#include "../Driver/Motor.h"
 volatile imu_struct imu_data;//陀螺仪角度接口
 
 #define DES_TEMP    40.0f
