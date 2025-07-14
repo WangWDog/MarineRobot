@@ -38,22 +38,22 @@ void protocol_parse(uint8_t *buf, uint16_t len) {
 }
 
 void handle_control_command(ControlFrame *cmd) {
-    // 平移控制
-    set_motion_xy(cmd->x_move, cmd->y_move);
-
-    // 姿态控制
-    set_attitude_yaw_pitch(cmd->yaw, cmd->pitch);
-
-    // 上浮/下潜控制
-    if (cmd->btn & 0x01) dive();   // btn1
-    if (cmd->btn & 0x02) rise();   // btn2
-
-    // 模式切换
-    if (cmd->btn & 0x04) {
-        set_mode(FAST);            // btn3
-    } else if (cmd->btn & 0x08) {
-        set_mode(SLOW);            // btn4
-    } else {
-        set_mode(NORMAL);          // 默认模式
-    }
+    // // 平移控制
+    // set_motion_xy(cmd->x_move, cmd->y_move);
+    //
+    // // 姿态控制
+    // set_attitude_yaw_pitch(cmd->yaw, cmd->pitch);
+    //
+    // // 上浮/下潜控制
+    // if (cmd->btn & 0x01) dive();   // btn1
+    // if (cmd->btn & 0x02) rise();   // btn2
+    //
+    // // 模式切换
+    // if (cmd->btn & 0x04) {
+    //     set_mode(FAST);            // btn3
+    // } else if (cmd->btn & 0x08) {
+    //     set_mode(SLOW);            // btn4
+    // } else {
+    //     set_mode(NORMAL);          // 默认模式
+    // }
 }

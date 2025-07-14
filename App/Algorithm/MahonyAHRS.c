@@ -230,3 +230,29 @@ float invSqrt(float x) {
 //====================================================================================================
 // END OF CODE
 //====================================================================================================
+
+// 将四元数转换为欧拉角（单位：度）
+// q0 q1 q2 q3 是你主控中传入或记录的最终姿态四元数
+static float q[4] = {1.0f, 0.0f, 0.0f, 0.0f};  // 当前姿态（可从外部赋值）
+
+void MahonyAHRSGetEuler(float *pitch, float *roll, float *yaw)
+{
+	// 使用 pitch、roll、yaw 角度制（°）
+	*pitch = asinf(-2.0f * (q[1] * q[3] - q[0] * q[2])) * 57.29578f;
+	*roll  = atan2f(2.0f * (q[2] * q[3] + q[0] * q[1]),
+				   -2.0f * (q[1] * q[1] + q[2] * q[2]) + 1.0f) * 57.29578f;
+	*yaw   = atan2f(2.0f * (q[1] * q[2] + q[0] * q[3]),
+					q[0] * q[0] + q[1] * q[1] - q[2] * q[2] - q[3] * q[3]) * 57.29578f;
+}
+
+// 你可以在 update 中将最终姿态复制给这个 q[]
+// 这样 MahonyAHRSGetEuler() 才能使用最新结果
+void MahonyAHRSupdateIMU_Save(float gx, float gy, float gz, float ax, float ay, float az)
+{
+	static float internal_q[4] = {1.0f, 0.0f, 0.0f, 0.0f};
+	MahonyAHRSupdateIMU(internal_q, gx, gy, gz, ax, ay, az);
+	q[0] = internal_q[0];
+	q[1] = internal_q[1];
+	q[2] = internal_q[2];
+	q[3] = internal_q[3];
+}

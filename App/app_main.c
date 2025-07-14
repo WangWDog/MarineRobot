@@ -10,6 +10,7 @@
 #include "adc_task.h"
 #include "sht30.h"
 #include "uart4_rx_task.h"
+#include "PID_task.h"
 
 void app_main_init()
 {
@@ -22,4 +23,5 @@ void app_main_start()
     xTaskCreate(sht30_task, "SHT30Task", 128, NULL, 3, NULL);
     xTaskCreate(motion_task, "MotionTask", 128, NULL, 3, NULL);
     xTaskCreate(uart_rx_task, "UartRxTask",  256, NULL, 4, &UartRxTaskHandle);
+    xTaskCreate(PID_task, "PIDTask",  256, NULL, 4, NULL);
 }
