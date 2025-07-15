@@ -161,7 +161,7 @@ static uint8_t write_BMI088_gyro_reg_data_error[BMI088_WRITE_GYRO_REG_NUM][3] =
 uint8_t BMI088_init(void)
 {
     uint8_t error = BMI088_NO_ERROR;
-    // GPIO and SPI  Init .
+    // GPIO and SPI Init .
     BMI088_GPIO_init();
     BMI088_com_init();
 
@@ -251,10 +251,10 @@ uint8_t bmi088_gyro_init(void)
     BMI088_delay_us(BMI088_COM_WAIT_SENSOR_TIME);
 
     // check the "who am I"
-    if (res != BMI088_GYRO_CHIP_ID_VALUE)
-    {
-        return BMI088_NO_SENSOR;
-    }
+    // if (res != BMI088_GYRO_CHIP_ID_VALUE)
+    // {
+    //     return BMI088_NO_SENSOR;
+    // }
 
     //set gyro sonsor config and check
     for (write_reg_num = 0; write_reg_num < BMI088_WRITE_GYRO_REG_NUM; write_reg_num++)
@@ -350,18 +350,18 @@ static void BMI088_read_single_reg(uint8_t reg, uint8_t *return_data)
     *return_data = BMI088_read_write_byte(0x55);
 }
 
-//static void BMI088_write_muli_reg(uint8_t reg, uint8_t* buf, uint8_t len )
-//{
-//    BMI088_read_write_byte( reg );
-//    while( len != 0 )
-//    {
-
-//        BMI088_read_write_byte( *buf );
-//        buf ++;
-//        len --;
-//    }
-
-//}
+// static void BMI088_write_muli_reg(uint8_t reg, uint8_t* buf, uint8_t len )
+// {
+//     BMI088_read_write_byte( reg );
+//     while( len != 0 )
+//     {
+//
+//         BMI088_read_write_byte( *buf );
+//         buf ++;
+//         len --;
+//     }
+//
+// }
 /**
 ************************************************************************
 * @brief:      	BMI088_read_muli_reg(uint8_t reg, uint8_t *buf, uint8_t len)

@@ -2,7 +2,7 @@
 // Created by 大口大口喝拿铁 on 25-7-12.
 //
 
-#include "Motor.h"
+#include "motor.h"
 #include "tim.h"
 #include "stm32h7xx_hal.h"
 #include "cmsis_os.h"
@@ -72,32 +72,48 @@ void motor_pwm_init(void)
 }
 
 // 电机控制基础函数：根据转向分别设置两个通道
+
 static void set_motor_pwm(TIM_HandleTypeDef *htim_pos, uint32_t ch_pos,
-                          TIM_HandleTypeDef *htim_neg, uint32_t ch_neg,
-                          float speed_rate)
+						  TIM_HandleTypeDef *htim_neg, uint32_t ch_neg,
+						  float speed_rate)
 {
+	if (fabsf(speed_rate) < 0.01f) {
+		// 静止状态，两个通道都关
+		__HAL_TIM_SET_COMPARE(htim_pos, ch_pos, 0);
+		__HAL_TIM_SET_COMPARE(htim_neg, ch_neg, 0);
+		return;
+	}
+
+	// 映射到有效PWM范围（8800 ~ 12000）
+	float abs_rate = fabsf(speed_rate);
+	float duty = MIN_ACTIVE_DUTY + (1.0f - MIN_ACTIVE_DUTY) * abs_rate;
+	if (duty > 1.0f) duty = 1.0f;
+
+	uint32_t compare_val = (uint32_t)(duty * MAX_PWM);
+	if (compare_val > MAX_PWM) compare_val = MAX_PWM;
+
 	if (speed_rate > 0.0f) {
-		__HAL_TIM_SET_COMPARE(htim_pos, ch_pos, speed_rate * MAX_PWM);
+		// 正转：正通道输出，负通道为0
+		__HAL_TIM_SET_COMPARE(htim_pos, ch_pos, compare_val);
 		__HAL_TIM_SET_COMPARE(htim_neg, ch_neg, 0);
-	} else if (speed_rate < 0.0f) {
-		__HAL_TIM_SET_COMPARE(htim_pos, ch_pos, 0);
-		__HAL_TIM_SET_COMPARE(htim_neg, ch_neg, -speed_rate * MAX_PWM);
 	} else {
+		// 反转：负通道输出，正通道为0
 		__HAL_TIM_SET_COMPARE(htim_pos, ch_pos, 0);
-		__HAL_TIM_SET_COMPARE(htim_neg, ch_neg, 0);
+		__HAL_TIM_SET_COMPARE(htim_neg, ch_neg, compare_val);
 	}
 }
 
-// 电机驱动函数（输入为uint8_t，支持死区）
-void motor_driver(MotorMatrix id, uint8_t input)
+static void test_motor_pwm(TIM_HandleTypeDef *htim_pos, uint32_t ch_pos,
+						  TIM_HandleTypeDef *htim_neg, uint32_t ch_neg,
+						  int pwm)
 {
-	float speed_rate = 0.0f;
+		__HAL_TIM_SET_COMPARE(htim_pos, ch_pos, pwm);
+		__HAL_TIM_SET_COMPARE(htim_neg, ch_neg, 0);
+}
 
-	// 死区处理：125~129之间视为0
-	if (input < DEADZONE_MIN || input > DEADZONE_MAX) {
-		speed_rate = (input - 127.0f) / 128.0f;
-	}
-
+// 电机驱动函数（输入为uint8_t，支持死区）
+void motor_driver(MotorMatrix id, float speed_rate)
+{
 	switch (id)
 	{
 		case Front_Right:
@@ -118,21 +134,62 @@ void motor_driver(MotorMatrix id, uint8_t input)
 		case Middle_Left:
 			set_motor_pwm(&htim1, TIM_CHANNEL_4, &htim2, TIM_CHANNEL_3, speed_rate);
 			break;
+		case Back_Middle:
+			set_motor_pwm(&htim2, TIM_CHANNEL_4, &htim2, TIM_CHANNEL_1, speed_rate);
+		default:
+			//	set_motor_pwm(&htim1, TIM_CHANNEL_1, &htim3, TIM_CHANNEL_1, input);
+			break;
+	}
+}
+void test_driver(MotorMatrix id, int input)
+{
+	switch (id)
+	{
+		case Front_Right:
+			test_motor_pwm(&htim2, TIM_CHANNEL_2, &htim3, TIM_CHANNEL_4, input);
+			break;
+		case Back_Right:
+			test_motor_pwm(&htim3, TIM_CHANNEL_3, &htim3, TIM_CHANNEL_2, input);
+			break;
+		case Front_Left:
+			test_motor_pwm(&htim4, TIM_CHANNEL_4, &htim4, TIM_CHANNEL_3, input);
+			break;
+		case Back_Left:
+			test_motor_pwm(&htim4, TIM_CHANNEL_2, &htim4, TIM_CHANNEL_1, input);
+			break;
+		case Middle_Right:
+			test_motor_pwm(&htim1, TIM_CHANNEL_2, &htim1, TIM_CHANNEL_3, input);
+			break;
+		case Middle_Left:
+			test_motor_pwm(&htim1, TIM_CHANNEL_4, &htim2, TIM_CHANNEL_3, input);
+			break;
+		case Back_Middle:
+			test_motor_pwm(&htim2, TIM_CHANNEL_4, &htim2, TIM_CHANNEL_1, input);
 		default:
 			// 非法ID忽略或可加入报警
-			// set_motor_pwm(&htim1, TIM_CHANNEL_2, &htim1, TIM_CHANNEL_3, speed_rate);
-			// set_motor_pwm(&htim1, TIM_CHANNEL_4, &htim2, TIM_CHANNEL_3, speed_rate);
+		//	test_motor_pwm(&htim1, TIM_CHANNEL_1, &htim3, TIM_CHANNEL_1, input);
 
 			break;
 	}
 }
-
-// 一次性控制8路电机的占空比输入（结构体接口）
-void motor_pwm_output(const MotorPWMCommand_t* pwm_cmd)
+void motor_driver_float(MotorMatrix id, float thrust)
 {
-	if (pwm_cmd == NULL) return;
+	if (thrust > 1.0f)  thrust = 1.0f;
+	if (thrust < -1.0f) thrust = -1.0f;
+
+	if (fabsf(thrust) < 0.01f) {
+		motor_driver(id, 0.0f);  // 安全停转
+		return;
+	}
+
+	motor_driver(id, thrust);
+}
+
+void motor_output_all(const float motor_output[8])
+{
+	if (motor_output == NULL) return;
 
 	for (uint8_t i = 0; i < 8; i++) {
-		motor_driver(i + 1, pwm_cmd->motor_pwm[i]);  // 电机编号从1开始
+		motor_driver_float((MotorMatrix)(i + 1), motor_output[i]);
 	}
 }

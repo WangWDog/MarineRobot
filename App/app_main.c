@@ -6,7 +6,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "imu_task.h"
-#include "Driver/Motor.h"
+#include "Driver/motor.h"
 #include "adc_task.h"
 #include "sht30.h"
 #include "uart4_rx_task.h"
@@ -20,9 +20,9 @@ void app_main_init()
 
 void app_main_start()
 {
-    // xTaskCreate(imu_task, "ImuTask", 128, NULL, 3, NULL);
-    // xTaskCreate(adc_task, "ADCTask", 128, NULL, 3, NULL);
-    // xTaskCreate(sht30_task, "SHT30Task", 128, NULL, 3, NULL);
-     // xTaskCreate(motion_task, "MotionTask", 256, NULL, 3, NULL);
+     xTaskCreate(imu_task, "ImuTask", 128, NULL, 3, NULL);
+        // xTaskCreate(adc_task, "ADCTask", 128, NULL, 3, NULL);
+        // xTaskCreate(sht30_task, "SHT30Task", 128, NULL, 3, NULL);
+     xTaskCreate(motion_task, "MotionTask", 256, NULL, 3, NULL);
      xTaskCreate(uart_rx_task, "UartRxTask",  512, NULL, 5, &UartRxTaskHandle);
 }
