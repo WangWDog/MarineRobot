@@ -9,7 +9,7 @@
 #include "BMI088driver.h"
 #include "cmsis_os.h"
 #include "MahonyAHRS.h"
-#include "../Driver/Motor.h"
+#include "../Driver/motor.h"
 volatile imu_struct imu_data;//陀螺仪角度接口
 
 #define DES_TEMP    40.0f
@@ -19,8 +19,8 @@ volatile imu_struct imu_data;//陀螺仪角度接口
 #define MAX_OUT     500
 #define rad2deg 57.2957795f
 
-osMutexId imu_mutexHandle;         // 互斥锁句柄
-osMutexDef(imu_mutex);            // 静态互斥锁定义（CMSIS-RTOS风格）
+// osMutexId imu_mutexHandle;         // 互斥锁句柄
+// osMutexDef(imu_mutex);            // 静态互斥锁定义（CMSIS-RTOS风格）
 
 float imuQuat[4] = {0.0f};
 float out = 0;
@@ -50,13 +50,12 @@ void GetAngle(float q[4], float *yaw, float *pitch, float *roll)
 void imu_task(void const * argument)
 {
     /* USER CODE BEGIN ImuTask_Entry */
+    // imu_mutexHandle = osMutexCreate(osMutex(imu_mutex)); // 创建互斥锁
     osDelay(10); // 系统稳定后再初始化
     while(BMI088_init())
     {
         osDelay(100);
     }
-    // imu_mutexHandle = osMutexCreate(osMutex(imu_mutex)); // 创建互斥锁
-
     AHRS_init(imuQuat);
     /* Infinite loop */
     for(;;)
@@ -74,23 +73,23 @@ bool imu_get_euler(float* yaw, float* pitch, float* roll)
 {
     if (!yaw || !pitch || !roll) return false;  // 判空防止非法指针
 
-    osMutexWait(imu_mutexHandle, osWaitForever);  // 🔒上锁
+    // osMutexWait(imu_mutexHandle, osWaitForever);  // 🔒上锁
 
     *yaw   = imu_data.imuAngle[INS_YAW_ADDRESS_OFFSET];
     *pitch = imu_data.imuAngle[INS_PITCH_ADDRESS_OFFSET];
     *roll  = imu_data.imuAngle[INS_ROLL_ADDRESS_OFFSET];
 
-    osMutexRelease(imu_mutexHandle);  // 🔓解锁
+    // osMutexRelease(imu_mutexHandle);  // 🔓解锁
     return true;  // 返回成功
 }
 bool imu_get_accel(float* ax, float* ay, float* az)
 {
     if (!ax || !ay || !az) return false;
 
-    osMutexWait(imu_mutexHandle, osWaitForever);  // 🔒
+    // osMutexWait(imu_mutexHandle, osWaitForever);  // 🔒
     *ax = imu_data.acc[0];
     *ay = imu_data.acc[1];
     *az = imu_data.acc[2];
-    osMutexRelease(imu_mutexHandle);              // 🔓
+    // osMutexRelease(imu_mutexHandle);              // 🔓
     return true;
 }

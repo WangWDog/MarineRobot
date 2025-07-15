@@ -1,61 +1,53 @@
 #include "protocol.h"
-#include "../Driver/Motor.h"
-
+#include "motor.h"
 #include <string.h>
-
 #include "motion.h"
-#include "usart.h"
 
 
+void protocol_parse(uint8_t* buf, uint16_t len)
+{
+    for (uint16_t offset = 0; offset + CONTROL_FRAME_LEN <= len; offset++)
+    {
+        if (buf[offset] != FRAME_HEAD || buf[offset + CONTROL_FRAME_LEN - 1] != FRAME_TAIL)
+            continue;
 
-void protocol_parse(uint8_t *buf, uint16_t len) {
-    // 调试信息
-    char a = 'd';  // 用于调试
-    HAL_UART_Transmit(&huart4, (uint8_t*)&a, sizeof(a), HAL_MAX_DELAY); // 发送调试字符
-
-    // 解析所有可能的帧（支持粘包/多帧）
-    for (uint16_t offset = 0; offset + CONTROL_FRAME_LEN <= len; offset++) {
-        // 帧头和帧尾校验
-        if (buf[offset] != FRAME_HEAD || buf[offset + CONTROL_FRAME_LEN - 1] != FRAME_TAIL) continue;
-
-        // 校验和验证
+        // 校验和
         uint8_t sum = 0;
-        for (int j = 1; j <= 6; j++) sum ^= buf[offset + j]; // 校验和计算
+        for (int j = 1; j <= 6; j++) sum ^= buf[offset + j];
         if (sum != buf[offset + 7]) continue;
 
-        // 有效帧 → 构建结构体
+        // === 构建控制帧（已按标准 0~255 协议处理） ===
         ControlFrame cmd;
-        cmd.x_move = buf[offset + 1] / 255.0f;
-        cmd.y_move = buf[offset + 2] / 255.0f;
-        cmd.yaw    = buf[offset + 3] / 255.0f;
-        cmd.pitch  = buf[offset + 4] / 255.0f;
-        cmd.btn    = buf[offset + 5];
+        cmd.x_move = buf[offset + 1]; // 原始值 0~255，后面转换为 -1 ~ +1 推力
+        cmd.y_move = buf[offset + 2];
+        cmd.yaw = buf[offset + 3];
+        cmd.pitch = buf[offset + 4]; // 原始值 0~255，后面映射为角度
+        cmd.btn = buf[offset + 5]; // 按钮的值
 
-        // 调用控制命令处理函数
-        handle_control_command(&cmd);
+        handle_control_command(&cmd); // 更新目标变量
 
-        // 继续检查后续帧（支持多帧连续）
         offset += CONTROL_FRAME_LEN - 1;
     }
 }
 
-void handle_control_command(ControlFrame *cmd) {
-    // // 平移控制
-    // set_motion_xy(cmd->x_move, cmd->y_move);
-    //
-    // // 姿态控制
-    // set_attitude_yaw_pitch(cmd->yaw, cmd->pitch);
-    //
-    // 上浮/下潜控制
-    if (cmd->btn & 0x01) dive();   // btn1
-    if (cmd->btn & 0x02) rise();   // btn2
-    //
-    // // 模式切换
-    // if (cmd->btn & 0x04) {
-    //     set_mode(FAST);            // btn3
-    // } else if (cmd->btn & 0x08) {
-    //     set_mode(SLOW);            // btn4
-    // } else {
-    //     set_mode(NORMAL);          // 默认模式
-    // }
+void handle_control_command(ControlFrame* cmd)
+{
+    MotionCommand mc;
+
+    // === 解析推力方向 ===
+    mc.x_thrust = (cmd->x_move - 127.0f) / 128.0f; // 前后 [-127,128]
+    mc.y_thrust = (cmd->y_move - 127.0f) / 128.0f; // 左右 [-127,128]
+    mc.yaw_thrust = (cmd->yaw - 127.0f) / 128.0f; // 偏航  [-127,128]
+    mc.pitch_angle = (cmd->pitch - 127.0f) * (60.0f / 255.0f); // 映射到 -30~+30°
+    mc.z_thrust = 0.0f;
+    mc.thrust_scale = 1.0f;
+
+    // === 按钮功能解析 ===
+    if (cmd->btn & 0x01) mc.z_thrust = -0.5f; // 上浮
+    if (cmd->btn & 0x02) mc.z_thrust = +0.5f; // 下潜
+    if (cmd->btn & 0x04) mc.thrust_scale = 1.5f; // 加速
+    if (cmd->btn & 0x08) mc.thrust_scale = 0.5f; // 慢速
+
+    // === 提交给 motion 控制系统 ===
+    apply_motion_command(&mc);
 }

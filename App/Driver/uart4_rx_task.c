@@ -35,14 +35,15 @@ void uart_rx_task(void *argument)
 
                 if (sum == uart_rx_buf[6])
                 {
-                    ControlFrame cmd;
-                    cmd.x_move = uart_rx_buf[1] / 255.0f;
-                    cmd.y_move = uart_rx_buf[2] / 255.0f;
-                    cmd.yaw    = uart_rx_buf[3] / 255.0f;
-                    cmd.pitch  = uart_rx_buf[4] / 255.0f;
-                    cmd.btn    = uart_rx_buf[5];
+                    ControlFrame cmd_raw;
 
-                    handle_control_command(&cmd);
+                    cmd_raw.x_move = uart_rx_buf[1];
+                    cmd_raw.y_move = uart_rx_buf[2];
+                    cmd_raw.yaw    = uart_rx_buf[3];
+                    cmd_raw.pitch  = uart_rx_buf[4];
+                    cmd_raw.btn    = uart_rx_buf[5];
+
+                    handle_control_command(&cmd_raw);
                 }
 
                 // 移除一帧
@@ -63,11 +64,9 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
     {
         if (uart_rx_index < UART_RX_BUF_SIZE)
             uart_rx_buf[uart_rx_index++] = uart_rx_byte;
-
         BaseType_t xHigherPriorityTaskWoken = pdFALSE;
         vTaskNotifyGiveFromISR(UartRxTaskHandle, &xHigherPriorityTaskWoken);
         portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
-
         HAL_UART_Receive_IT(&huart4, &uart_rx_byte, 1);
     }
 }
