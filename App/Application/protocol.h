@@ -3,9 +3,11 @@
 
 #include <stdint.h>
 
-#define CONTROL_FRAME_LEN 9
+// 假设 CONTROL_FRAME_LEN 和其他宏定义如下
 #define FRAME_HEAD 0xAA
 #define FRAME_TAIL 0x55
+#define CONTROL_FRAME_LEN 8  // 每个数据包的长度
+#define MAX_RETRIES 5  // 最大重试次数
 
 // 控制数据结构体
 typedef struct {

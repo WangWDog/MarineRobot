@@ -1,38 +1,73 @@
+#include <string.h>
+#include "uart4_rx_task.h"
 #include "usart.h"
 #include "cmsis_os.h"
-#include "protocol.h"
-#include "uart4_rx_task.h"
-#define UART4_RX_BUFFER_SIZE 128
+#include "protocol.h"  // 你定义 ControlFrame 的地方
 
-static uint8_t uart4_dma_buf[UART4_RX_BUFFER_SIZE];   // DMA接收区
-static uint8_t uart4_proc_buf[UART4_RX_BUFFER_SIZE];  // 处理区
-static uint16_t uart4_last_pos = 0;
+#define UART_RX_BUF_SIZE 64
+#define FRAME_LEN 8
+#define FRAME_HEAD 0xAA
+#define FRAME_TAIL 0x55
 
-TaskHandle_t UartRxTaskHandle = NULL;
+static uint8_t uart_rx_buf[UART_RX_BUF_SIZE];
+static uint8_t uart_rx_index = 0;
+static uint8_t uart_rx_byte = 0;
+
+TaskHandle_t UartRxTaskHandle = NULL;  // 通知用句柄
+
 
 void uart_rx_task(void *argument)
 {
-    // 启动DMA接收
-    HAL_UART_Receive_DMA(&huart4, uart4_dma_buf, UART4_RX_BUFFER_SIZE);
-    __HAL_UART_ENABLE_IT(&huart4, UART_IT_IDLE);  // 开启空闲中断
+    // 启动串口接收（1 字节）
+    HAL_UART_Receive_IT(&huart4, &uart_rx_byte, 1);
 
-    for (;;) {
-        // 等待接收中断通知
+    for (;;)
+    {
         ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
 
-        uint16_t curr_pos = UART4_RX_BUFFER_SIZE - __HAL_DMA_GET_COUNTER(huart4.hdmarx);
-        uint16_t data_len = (curr_pos >= uart4_last_pos)
-                            ? (curr_pos - uart4_last_pos)
-                            : (UART4_RX_BUFFER_SIZE - uart4_last_pos + curr_pos);
+        // 解包滑窗
+        while (uart_rx_index >= FRAME_LEN)
+        {
+            if (uart_rx_buf[0] == FRAME_HEAD && uart_rx_buf[7] == FRAME_TAIL)
+            {
+                uint8_t sum = 0;
+                for (int i = 1; i <= 5; i++) sum ^= uart_rx_buf[i];
 
-        // 拷贝新接收数据
-        for (uint16_t i = 0; i < data_len; i++) {
-            uart4_proc_buf[i] = uart4_dma_buf[(uart4_last_pos + i) % UART4_RX_BUFFER_SIZE];
+                if (sum == uart_rx_buf[6])
+                {
+                    ControlFrame cmd;
+                    cmd.x_move = uart_rx_buf[1] / 255.0f;
+                    cmd.y_move = uart_rx_buf[2] / 255.0f;
+                    cmd.yaw    = uart_rx_buf[3] / 255.0f;
+                    cmd.pitch  = uart_rx_buf[4] / 255.0f;
+                    cmd.btn    = uart_rx_buf[5];
+
+                    handle_control_command(&cmd);
+                }
+
+                // 移除一帧
+                memmove(uart_rx_buf, uart_rx_buf + FRAME_LEN, uart_rx_index - FRAME_LEN);
+                uart_rx_index -= FRAME_LEN;
+            }
+            else {
+                // 移动1字节继续滑动
+                memmove(uart_rx_buf, uart_rx_buf + 1, --uart_rx_index);
+            }
         }
+    }
+}
 
-        uart4_last_pos = curr_pos;
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+    if (huart == &huart4)
+    {
+        if (uart_rx_index < UART_RX_BUF_SIZE)
+            uart_rx_buf[uart_rx_index++] = uart_rx_byte;
 
-        // 调用协议解析函数
-        protocol_parse(uart4_proc_buf, data_len);
+        BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+        vTaskNotifyGiveFromISR(UartRxTaskHandle, &xHigherPriorityTaskWoken);
+        portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+
+        HAL_UART_Receive_IT(&huart4, &uart_rx_byte, 1);
     }
 }

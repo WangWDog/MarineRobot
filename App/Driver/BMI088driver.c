@@ -251,10 +251,10 @@ uint8_t bmi088_gyro_init(void)
     BMI088_delay_us(BMI088_COM_WAIT_SENSOR_TIME);
 
     // check the "who am I"
-    // if (res != BMI088_GYRO_CHIP_ID_VALUE)
-    // {
-    //     return BMI088_NO_SENSOR;
-    // }
+    if (res != BMI088_GYRO_CHIP_ID_VALUE)
+    {
+        return BMI088_NO_SENSOR;
+    }
 
     //set gyro sonsor config and check
     for (write_reg_num = 0; write_reg_num < BMI088_WRITE_GYRO_REG_NUM; write_reg_num++)

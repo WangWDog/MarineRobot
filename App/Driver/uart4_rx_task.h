@@ -5,8 +5,10 @@
 #define __UART4_RX_TASK_H__
 
 #include "cmsis_os.h"
+#define UART4_RX_BUFFER_SIZE 128
 
 extern TaskHandle_t UartRxTaskHandle;
+
 void uart_rx_task(void *argument);
 
 #endif

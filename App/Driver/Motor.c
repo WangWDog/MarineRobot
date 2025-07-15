@@ -100,10 +100,10 @@ void motor_driver(MotorMatrix id, uint8_t input)
 
 	switch (id)
 	{
-		case Back_Right:
+		case Front_Right:
 			set_motor_pwm(&htim2, TIM_CHANNEL_2, &htim3, TIM_CHANNEL_4, speed_rate);
 			break;
-		case Front_Right:
+		case Back_Right:
 			set_motor_pwm(&htim3, TIM_CHANNEL_3, &htim3, TIM_CHANNEL_2, speed_rate);
 			break;
 		case Front_Left:
