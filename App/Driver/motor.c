@@ -132,10 +132,10 @@ void motor_driver(MotorMatrix id, float speed_rate)
 		case Middle_Right:
 			set_motor_pwm(&htim1, TIM_CHANNEL_2, &htim1, TIM_CHANNEL_3, speed_rate,0.0);
 			break;
-		case Middle_Left:
+		case Back_Middle:
 			set_motor_pwm(&htim1, TIM_CHANNEL_4, &htim2, TIM_CHANNEL_3, speed_rate,0.0);
 			break;
-		case Back_Middle:
+		case Middle_Left:
 			set_motor_pwm(&htim2, TIM_CHANNEL_4, &htim2, TIM_CHANNEL_1, speed_rate,0.0);
 		default:
 			//	set_motor_pwm(&htim1, TIM_CHANNEL_1, &htim3, TIM_CHANNEL_1, input);

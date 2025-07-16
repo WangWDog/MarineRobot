@@ -55,15 +55,15 @@ void handle_control_command(ControlFrame* cmd)
     // 死区控制 就是防止推杆未回正导致的控制响应
     mc.y_thrust = (cmd->y_move - 127.0f) / 128.0f; // 左右 [-127,128]
     mc.yaw_thrust = (cmd->yaw - 127.0f) / 128.0f; // 偏航  [-127,128]
-    mc.pitch_angle = (cmd->pitch - 127.0f) * (60.0f / 255.0f); // 映射到 -30~+30°
+    mc.pitch_thrust = (cmd->pitch - 127.0f) * (60.0f / 255.0f); // 映射到 -30~+30°
     mc.z_thrust = 0.0f;
-    mc.thrust_scale = 1.0f;
+    mc.mode = NORMAL;
 
     // === 按钮功能解析 ===
     if (cmd->btn & 0x01) mc.z_thrust = -0.5f; // 上浮
     if (cmd->btn & 0x02) mc.z_thrust = +0.5f; // 下潜
-    if (cmd->btn & 0x04) mc.thrust_scale = 1.5f; // 加速
-    if (cmd->btn & 0x08) mc.thrust_scale = 0.5f; // 慢速
+    if (cmd->btn & 0x04) mc.mode = FAST; // 加速
+    if (cmd->btn & 0x08) mc.mode = SLOW; // 慢速
 
     // === 提交给 motion 控制系统 ===
     apply_motion_command(&mc);
