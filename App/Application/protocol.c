@@ -33,9 +33,26 @@ void protocol_parse(uint8_t* buf, uint16_t len)
 void handle_control_command(ControlFrame* cmd)
 {
     MotionCommand mc;
-
+    // === 加入死区控制 ===
+    if (cmd->x_move>122&&cmd->x_move<132)
+    {
+        cmd->x_move = 127;
+    }
+    if (cmd->y_move>122&&cmd->y_move<132)
+    {
+        cmd->y_move = 127;
+    }
+    if (cmd->yaw>122&&cmd->yaw<132)
+    {
+        cmd->yaw = 127;
+    }
+    if (cmd->pitch>122&&cmd->pitch<132)
+    {
+        cmd->pitch = 127;
+    }
     // === 解析推力方向 ===
     mc.x_thrust = (cmd->x_move - 127.0f) / 128.0f; // 前后 [-127,128]
+    // 死区控制 就是防止推杆未回正导致的控制响应
     mc.y_thrust = (cmd->y_move - 127.0f) / 128.0f; // 左右 [-127,128]
     mc.yaw_thrust = (cmd->yaw - 127.0f) / 128.0f; // 偏航  [-127,128]
     mc.pitch_angle = (cmd->pitch - 127.0f) * (60.0f / 255.0f); // 映射到 -30~+30°

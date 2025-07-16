@@ -6,7 +6,6 @@
 #include "cmsis_os.h"
 #include <math.h>
 
-#include "protocol.h"
 
 // === 控制目标变量（静态封装） ===
 static float target_x = 0.0f; // 前进 / 后退
@@ -73,25 +72,32 @@ void compute_motor_output(float x, float y, float yaw,
 void motion_task(void const* argument)
 {
     motor_pwm_init();
-    osDelay(100);
-    PID_init(&pid_roll, PID_POSITION, roll_param, 0.5f, 0.2f);
-    PID_init(&pid_pitch, PID_POSITION, pitch_param, 0.5f, 0.2f);
-    osDelay(200); // 等待IMU稳定
-
-    while (1)
-    {
-        float yaw, pitch, roll;
-        float roll_out = 0.0f, pitch_out = 0.0f;
-
-        if (imu_get_euler(&yaw, &pitch, &roll))
-        {
-            roll_out = PID_calc(&pid_roll, roll, target_roll);
-            pitch_out = PID_calc(&pid_pitch, pitch, target_pitch);
-        }
-
-        compute_motor_output(target_x, target_y, yaw_torque,
-                             roll_out, pitch_out, z_thrust);
-
-        osDelay(10); // 100Hz 控制周期
-    }
+    // osDelay(100);
+    // PID_init(&pid_roll, PID_POSITION, roll_param, 0.5f, 0.2f);
+    // PID_init(&pid_pitch, PID_POSITION, pitch_param, 0.5f, 0.2f);
+    // osDelay(200); // 等待IMU稳定
+    //
+    // while (1)
+    // {
+    //     float yaw, pitch, roll;
+    //     float roll_out = 0.0f, pitch_out = 0.0f;
+    //
+    //     if (imu_get_euler(&yaw, &pitch, &roll))
+    //     {
+    //         roll_out = PID_calc(&pid_roll, roll, target_roll);
+    //         pitch_out = PID_calc(&pid_pitch, pitch, target_pitch);
+    //     }
+    //
+    //     compute_motor_output(target_x, target_y, yaw_torque,
+    //                          roll_out, pitch_out, z_thrust);
+    //
+    //     osDelay(10); // 100Hz 控制周期
+    // }
+    test_driver(Front_Right,20);
+    test_driver(Front_Left,20);
+    test_driver(Middle_Right,20);
+    test_driver(Middle_Left,20);
+    test_driver(Back_Left,20);
+    test_driver(Back_Middle,20);
+    test_driver(Back_Right,20);
 }

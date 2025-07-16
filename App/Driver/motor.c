@@ -75,7 +75,7 @@ void motor_pwm_init(void)
 
 static void set_motor_pwm(TIM_HandleTypeDef *htim_pos, uint32_t ch_pos,
 						  TIM_HandleTypeDef *htim_neg, uint32_t ch_neg,
-						  float speed_rate)
+						  float speed_rate, float standard_deviation)
 {
 	if (fabsf(speed_rate) < 0.01f) {
 		// 静止状态，两个通道都关
@@ -86,6 +86,7 @@ static void set_motor_pwm(TIM_HandleTypeDef *htim_pos, uint32_t ch_pos,
 
 	// 映射到有效PWM范围（8800 ~ 12000）
 	float abs_rate = fabsf(speed_rate);
+	abs_rate += standard_deviation;
 	float duty = MIN_ACTIVE_DUTY + (1.0f - MIN_ACTIVE_DUTY) * abs_rate;
 	if (duty > 1.0f) duty = 1.0f;
 
@@ -117,25 +118,25 @@ void motor_driver(MotorMatrix id, float speed_rate)
 	switch (id)
 	{
 		case Front_Right:
-			set_motor_pwm(&htim2, TIM_CHANNEL_2, &htim3, TIM_CHANNEL_4, speed_rate);
+			set_motor_pwm(&htim2, TIM_CHANNEL_2, &htim3, TIM_CHANNEL_4, speed_rate,0.0);
 			break;
 		case Back_Right:
-			set_motor_pwm(&htim3, TIM_CHANNEL_3, &htim3, TIM_CHANNEL_2, speed_rate);
+			set_motor_pwm(&htim3, TIM_CHANNEL_3, &htim3, TIM_CHANNEL_2, speed_rate,0.0);
 			break;
 		case Front_Left:
-			set_motor_pwm(&htim4, TIM_CHANNEL_4, &htim4, TIM_CHANNEL_3, speed_rate);
+			set_motor_pwm(&htim4, TIM_CHANNEL_4, &htim4, TIM_CHANNEL_3, speed_rate,0.0);
 			break;
 		case Back_Left:
-			set_motor_pwm(&htim4, TIM_CHANNEL_2, &htim4, TIM_CHANNEL_1, speed_rate);
+			set_motor_pwm(&htim4, TIM_CHANNEL_2, &htim4, TIM_CHANNEL_1, speed_rate,0.0);
 			break;
 		case Middle_Right:
-			set_motor_pwm(&htim1, TIM_CHANNEL_2, &htim1, TIM_CHANNEL_3, speed_rate);
+			set_motor_pwm(&htim1, TIM_CHANNEL_2, &htim1, TIM_CHANNEL_3, speed_rate,0.0);
 			break;
 		case Middle_Left:
-			set_motor_pwm(&htim1, TIM_CHANNEL_4, &htim2, TIM_CHANNEL_3, speed_rate);
+			set_motor_pwm(&htim1, TIM_CHANNEL_4, &htim2, TIM_CHANNEL_3, speed_rate,0.0);
 			break;
 		case Back_Middle:
-			set_motor_pwm(&htim2, TIM_CHANNEL_4, &htim2, TIM_CHANNEL_1, speed_rate);
+			set_motor_pwm(&htim2, TIM_CHANNEL_4, &htim2, TIM_CHANNEL_1, speed_rate,0.0);
 		default:
 			//	set_motor_pwm(&htim1, TIM_CHANNEL_1, &htim3, TIM_CHANNEL_1, input);
 			break;
