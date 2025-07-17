@@ -1,5 +1,7 @@
 #ifndef PID_H
 #define PID_H
+#include <stdbool.h>
+
 #include "struct_typedef.h"
 enum PID_MODE
 {
@@ -27,6 +29,7 @@ typedef struct
     fp32 Dout;
     fp32 Dbuf[3];  //微分项 0最新 1上一次 2上上次
     fp32 error[3]; //误差项 0最新 1上一次 2上上次
+    bool is_angle;
 
 } pid_type_def;
 /**

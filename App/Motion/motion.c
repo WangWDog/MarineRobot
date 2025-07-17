@@ -95,23 +95,23 @@ void apply_motion_command(const MotionCommand* mc)
         z_thrust = mc->z_thrust;
     }
 
-    if (target_pitch > 30)
+    if (target_pitch > 20)
     {
-        target_pitch = 30;
+        target_pitch = 20;
     }
-    if (target_pitch < -30)
+    if (target_pitch < -20)
     {
-        target_pitch = -30;
+        target_pitch = -20;
     }
-
-    if (target_yaw > 175)
-    {
-        target_yaw = 175;
-    }
-    if (target_yaw < -175)
-    {
-        target_yaw = -175;
-    }
+    // 已经在pid中经行了处理
+    // if (target_yaw > 175)
+    // {
+    //     target_yaw = 175;
+    // }
+    // if (target_yaw < -175)
+    // {
+    //     target_yaw = -175;
+    // }
 }
 
 // 推力合成函数（带混控参数）
@@ -172,7 +172,13 @@ void compute_motor_output(float x, float y, float yaw,
 //     // 批量输出
 //     motor_output_all(m);
 // }
-
+float angle_error(float target, float current)
+{
+    float error = target - current;
+    while (error > 180.0f)  error -= 360.0f;
+    while (error < -180.0f) error += 360.0f;
+    return error;
+}
 // === 控制任务 ===
 void motion_task(void const* argument)
 {
@@ -182,12 +188,11 @@ void motion_task(void const* argument)
     PID_init(&pid_roll, PID_POSITION, roll_param, 0.5f, 0.2f);
     PID_init(&pid_pitch, PID_POSITION, pitch_param, 0.5f, 0.2f);
     osDelay(200); // 等待IMU稳定
-
+    pid_yaw.is_angle = true;
     while (1)
     {
         float yaw, pitch, roll;
         float roll_out = 0.0f, yaw_out = 0.0f, pitch_out = 0.0f;
-
         if (imu_get_euler(&yaw, &pitch, &roll))
         {
             roll_out = PID_calc(&pid_roll, roll, target_roll);

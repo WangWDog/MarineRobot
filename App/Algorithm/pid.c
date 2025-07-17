@@ -65,6 +65,7 @@ void PID_init(pid_type_def *pid, uint8_t mode, const fp32 PID[3], fp32 max_out, 
     pid->max_iout = max_iout;
     pid->Dbuf[0] = pid->Dbuf[1] = pid->Dbuf[2] = 0.0f;
     pid->error[0] = pid->error[1] = pid->error[2] = pid->Pout = pid->Iout = pid->Dout = pid->out = 0.0f;
+    pid->is_angle = false;
 }
 
 /**
@@ -92,7 +93,17 @@ fp32 PID_calc(pid_type_def *pid, fp32 ref, fp32 set)
     pid->error[1] = pid->error[0];
     pid->set = set;
     pid->fdb = ref;
-    pid->error[0] = set - ref;
+    if (pid->is_angle)
+    {
+        float err = set - ref;
+        while (err > 180.0f)  err -= 360.0f;
+        while (err < -180.0f) err += 360.0f;
+        pid->error[0] = err;
+    }
+    else
+    {
+        pid->error[0] = set - ref;
+    }
     if (pid->mode == PID_POSITION)
     {
         pid->Pout = pid->Kp * pid->error[0];
