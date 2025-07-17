@@ -14,7 +14,7 @@
 #define MOTION_SWITCH_DEBOUNCE_MS 500
 
 static uint32_t last_motion_toggle_time = 0;  // 上次切换时间（单位：ms）
-
+volatile uint16_t  config_packet_count = 0;
 // 外部参数变量声明（你已有的变量）
 extern float motor_bias[7];
 
@@ -52,7 +52,7 @@ void parse_tlv_frame(const uint8_t* frame, uint8_t len)
     if (length != len - 4) return; // HEAD + TYPE + LEN + TAIL = 4 字节
 
     const uint8_t* payload = &frame[3];
-
+    config_packet_count++;
     switch (type)
     {
     case 0x01: // PID 参数（pitch/roll/yaw 各3个 float）
