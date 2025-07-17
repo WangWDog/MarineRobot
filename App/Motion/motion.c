@@ -22,6 +22,11 @@ float SLOW_SENSI_X = 0.5f;
 float SLOW_SENSI_Y = 0.5f;
 float SLOW_SENSI_DEEP = 0.5f;
 
+
+bool is_roll_pid = true;
+bool is_pitch_pid = true;
+bool is_yaw_pid = true;
+
 enum {
     AXIS_X = 0,
     AXIS_Y = 1,
@@ -46,9 +51,9 @@ float motor_mix_gain[7][6] = {
 // === 控制目标变量（静态封装） ===
 static float target_x = 0.0f; // 前进 / 后退
 static float target_y = 0.0f; // 横移
-static float target_yaw = 0.0f; // 偏航差速（开环）
-static float target_pitch = 0.0f; // 俯仰角目标（度）
-static float target_roll = 0.0f; // 横滚角目标（暂设为0）
+float target_yaw = 0.0f; // 偏航差速（开环）
+float target_pitch = 0.0f; // 俯仰角目标（度）
+float target_roll = 0.0f; // 横滚角目标（暂设为0）
 static float z_thrust = 0.0f; // 上浮 / 下潜推力（-1.0~+1.0）
 
 // === PID 控制器 ===
@@ -189,7 +194,9 @@ void motion_task(void const* argument)
             pitch_out = PID_calc(&pid_pitch, pitch, target_pitch);
             yaw_out = PID_calc(&pid_yaw, yaw, target_yaw);
         }
-
+        if (!is_yaw_pid)   yaw_out = 0.0f;
+        if (!is_pitch_pid) pitch_out = 0.0f;
+        if (!is_roll_pid)  roll_out = 0.0f;
         compute_motor_output(target_x, target_y, yaw_out,
                              roll_out, pitch_out, z_thrust);
 

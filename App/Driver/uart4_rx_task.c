@@ -1,5 +1,8 @@
 #include <string.h>
 #include "uart4_rx_task.h"
+
+#include <stdbool.h>
+
 #include "usart.h"
 #include "cmsis_os.h"
 #include "parse_frame.h"
@@ -28,52 +31,74 @@ void uart_rx_task(void *argument)
     {
         ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
 
-        while (uart_rx_index >= FRAME_LEN)
+        while (uart_rx_index >= 5) // 保留最小入口判断
         {
-            // === 原控制帧识别（固定8字节）
-            if (uart_rx_buf[0] == FRAME_HEAD && uart_rx_buf[7] == FRAME_TAIL)
-            {
-                uint8_t sum = 0;
-                for (int i = 1; i <= 5; i++) sum ^= uart_rx_buf[i];
-                if (sum == uart_rx_buf[6])
-                {
-                    ControlFrame cmd_raw;
-                    cmd_raw.x_move = uart_rx_buf[1];
-                    cmd_raw.y_move = uart_rx_buf[2];
-                    cmd_raw.yaw    = uart_rx_buf[3];
-                    cmd_raw.pitch  = uart_rx_buf[4];
-                    cmd_raw.btn    = uart_rx_buf[5];
-                    handle_control_command(&cmd_raw);
-                }
-                memmove(uart_rx_buf, uart_rx_buf + FRAME_LEN, uart_rx_index - FRAME_LEN);
-                uart_rx_index -= FRAME_LEN;
-                continue;
-            }
+            bool matched = false;
 
-            // === TLV 参数帧识别（可变长，至少5字节）
-            if (uart_rx_buf[0] == TLV_FRAME_HEAD && uart_rx_index >= 5)
+            // TLV 帧头检测，仅在足够长才处理
+            if (uart_rx_buf[0] == TLV_FRAME_HEAD)
             {
-                uint8_t type = uart_rx_buf[1];
-                uint8_t len  = uart_rx_buf[2];
-                uint8_t full_len = len + 4; // HEAD + TYPE + LEN + TAIL
+                // TLV 最少5字节才能提取 len
+                if (uart_rx_index >= 3) {
+                    uint8_t len = uart_rx_buf[2];
+                    uint8_t full_len = len + 4;
 
-                // ✅ 加入边界保护：防止越界、帧伪造
-                if (full_len <= uart_rx_index &&
-                    full_len <= TLV_MAX_LEN &&
-                    uart_rx_buf[full_len - 1] == TLV_FRAME_TAIL)
-                {
-                    parse_tlv_frame(uart_rx_buf, full_len);
-                    memmove(uart_rx_buf, uart_rx_buf + full_len, uart_rx_index - full_len);
-                    uart_rx_index -= full_len;
-                    continue;
+                    // ⚠️ 如果长度不足，等待更多数据（不滑动）
+                    if (uart_rx_index < full_len)
+                        break;  // ❗️暂时退出，等待后续数据
+
+                    // 长度满足再解析
+                    if (full_len <= TLV_MAX_LEN &&
+                        uart_rx_buf[full_len - 1] == TLV_FRAME_TAIL)
+                    {
+                        parse_tlv_frame(uart_rx_buf, full_len);
+                        memmove(uart_rx_buf, uart_rx_buf + full_len, uart_rx_index - full_len);
+                        uart_rx_index -= full_len;
+                        matched = true;
+                    }
                 }
             }
 
-            // 否则滑窗继续移动
-            memmove(uart_rx_buf, uart_rx_buf + 1, --uart_rx_index);
+            // === 匹配固定控制帧（8字节） ===
+            else if (uart_rx_buf[0] == FRAME_HEAD)
+            {
+                // 确保有足够字节才能判断控制帧
+                if (uart_rx_index < 8)
+                    break;  // ⛔ 暂停处理，等待更多数据
+
+                if (uart_rx_buf[7] == FRAME_TAIL)
+                {
+                    uint8_t sum = 0;
+                    for (int i = 1; i <= 5; i++) sum ^= uart_rx_buf[i];
+
+                    if (sum == uart_rx_buf[6])
+                    {
+                        ControlFrame cmd_raw;
+                        cmd_raw.x_move = uart_rx_buf[1];
+                        cmd_raw.y_move = uart_rx_buf[2];
+                        cmd_raw.yaw    = uart_rx_buf[3];
+                        cmd_raw.pitch  = uart_rx_buf[4];
+                        cmd_raw.btn    = uart_rx_buf[5];
+                        handle_control_command(&cmd_raw);
+                    }
+
+                    memmove(uart_rx_buf, uart_rx_buf + 8, uart_rx_index - 8);
+                    uart_rx_index -= 8;
+                    matched = true;
+                }
+            }
+
+
+            // === 无匹配，滑动窗口 ===
+            if (!matched)
+            {
+                memmove(uart_rx_buf, uart_rx_buf + 1, uart_rx_index - 1);
+                uart_rx_index -= 1;
+            }
         }
     }
 }
+
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
