@@ -26,6 +26,7 @@ float SLOW_SENSI_DEEP = 0.5f;
 bool is_roll_pid = true;
 bool is_pitch_pid = true;
 bool is_yaw_pid = true;
+volatile bool is_motion_enabled = false;  // 初始默认关闭
 
 enum {
     AXIS_X = 0,
@@ -191,6 +192,15 @@ void motion_task(void const* argument)
     pid_yaw.is_angle = true;
     while (1)
     {
+        // === 控制开关判断 ===
+        if (!is_motion_enabled)
+        {
+            // 可选：关闭所有电机输出
+            compute_motor_output(0, 0, 0, 0, 0, 0);
+
+            osDelay(20);  // 降低空转占用
+            continue;
+        }
         float yaw, pitch, roll;
         float roll_out = 0.0f, yaw_out = 0.0f, pitch_out = 0.0f;
         if (imu_get_euler(&yaw, &pitch, &roll))
