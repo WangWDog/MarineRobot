@@ -16,12 +16,12 @@ typedef struct {
     float motor_pwm[8];
 } MotorPWMCommand_t;
 typedef enum  {
-    Front_Left = 1,
+    Back_Right = 1,
     Front_Right = 2,
-    Back_Left = 3,
-    Back_Right = 4,
-    Middle_Left = 5,
-    Middle_Right = 6,
+    Front_Left = 3,
+    Back_Left = 4,
+    Middle_Right = 5,
+    Middle_Left = 6,
     Back_Middle = 7,
 } MotorMatrix;
 void test_driver(MotorMatrix id, int input);

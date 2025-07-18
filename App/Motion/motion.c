@@ -184,6 +184,7 @@ float angle_error(float target, float current)
 void motion_task(void const* argument)
 {
     motor_pwm_init();
+    // motor_driver(Back_Right,1);
     osDelay(100);
     PID_init(&pid_yaw, PID_POSITION, yaw_param, 0.5f, 0.2f);
     PID_init(&pid_roll, PID_POSITION, roll_param, 0.5f, 0.2f);

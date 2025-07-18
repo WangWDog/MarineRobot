@@ -17,16 +17,6 @@ float motor_bias[7] = {
     0.0f, // [5] Middle_Right
     0.0f // [6] Back_Middle
 };
-/*
-	电机1：转向1对应TIM2_CH2,转向2对应TIM3_CH4
-	电机2：转向1对应TIM3_CH3,转向2对应TIM3_CH2
-	电机3：转向1对应TIM4_CH4,转向2对应TIM4_CH3
-	电机4：转向1对应TIM4_CH2,转向2对应TIM4_CH1
-	电机5：转向1对应TIM1_CH1,转向2对应TIM3_CH1
-	电机6：转向1对应TIM2_CH4,转向2对应TIM2_CH1
-	电机7：转向1对应TIM2_CH3,转向2对应TIM1_CH4
-	电机8：转向1对应TIM1_CH3,转向2对应TIM1_CH2
-*/
 void clear_all_pwm(void)
 {
     __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 0);
@@ -131,24 +121,26 @@ static void test_motor_pwm(TIM_HandleTypeDef* htim_pos, uint32_t ch_pos,
 // 电机驱动函数（输入为uint8_t，支持死区）
 void motor_driver(MotorMatrix id, float speed_rate)
 {
-    if (id < Front_Left || id > Back_Middle) return; // 合法性保护
+    if (id < Back_Right || id > Back_Middle) return; // 合法性保护
 
     float bias = motor_bias[id - 1]; // 正确索引偏差表
 
     switch (id)
     {
-    case Front_Left:
-        set_motor_pwm(&htim4, TIM_CHANNEL_4, &htim4, TIM_CHANNEL_3, speed_rate, bias);
+    case Back_Right:
+        set_motor_pwm(&htim3, TIM_CHANNEL_3, &htim3, TIM_CHANNEL_2, speed_rate, bias);
         break;
     case Front_Right:
         set_motor_pwm(&htim2, TIM_CHANNEL_2, &htim3, TIM_CHANNEL_4, speed_rate, bias);
         break;
+    case Front_Left:
+        set_motor_pwm(&htim4, TIM_CHANNEL_4, &htim4, TIM_CHANNEL_3, speed_rate, bias);
+        break;
+
     case Back_Left:
         set_motor_pwm(&htim4, TIM_CHANNEL_2, &htim4, TIM_CHANNEL_1, speed_rate, bias);
         break;
-    case Back_Right:
-        set_motor_pwm(&htim3, TIM_CHANNEL_3, &htim3, TIM_CHANNEL_2, speed_rate, bias);
-        break;
+
     case Middle_Left:
         set_motor_pwm(&htim2, TIM_CHANNEL_4, &htim2, TIM_CHANNEL_1, speed_rate, bias);
         break;
