@@ -1,0 +1,1 @@
+This programe runs on the STM32H407 and controls a 7-motorm marine robot capable of moving in six degress of freedom: X, Y, Z, roll, pitch, and yaw. To enable dynamic response to motion commands, we introdeced FreeRTOS and state machine theoery, whitch hepled decouple the system archiecture, making the project modular,easy to program, and well-structured.
