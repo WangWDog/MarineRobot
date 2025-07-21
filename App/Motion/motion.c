@@ -16,16 +16,16 @@ float FAST_SENSI_X = 1.2f;
 float FAST_SENSI_Y = 1.2f;
 float FAST_SENSI_DEEP = 1.2f;
 
-float SLOW_SENSI_YAW = 0.5f;
+float SLOW_SENSI_YAW = 0.8f;
 float SLOW_SENSI_PITCH = 0.5f;
-float SLOW_SENSI_X = 0.5f;
-float SLOW_SENSI_Y = 0.5f;
+float SLOW_SENSI_X = 0.8f;
+float SLOW_SENSI_Y = 0.8f;
 float SLOW_SENSI_DEEP = 0.5f;
 
 
-bool is_roll_pid = true;
-bool is_pitch_pid = true;
-bool is_yaw_pid = true;
+bool is_roll_pid = false;
+bool is_pitch_pid = false;
+bool is_yaw_pid = false;
 volatile bool is_motion_enabled = false;  // 初始默认关闭
 
 enum {
@@ -73,8 +73,8 @@ void apply_motion_command(const MotionCommand* mc)
 
     if (mc->mode == SLOW)
     {
-        target_x = mc->x_thrust * SLOW_SENSI_X;
-        target_y = mc->y_thrust * SLOW_SENSI_Y;
+        target_x = mc->x_thrust * SLOW_SENSI_X *0.8;
+        target_y = mc->y_thrust * SLOW_SENSI_Y *0.8 ;
         target_yaw -= mc->yaw_thrust * YAW_SENSI * SLOW_SENSI_YAW;
         target_pitch += mc->pitch_thrust * PITCH_SENSI * SLOW_SENSI_PITCH;
         z_thrust = mc->z_thrust * SLOW_SENSI_DEEP;
@@ -89,8 +89,8 @@ void apply_motion_command(const MotionCommand* mc)
     }
     if (mc->mode == NORMAL)
     {
-        target_x = mc->x_thrust;
-        target_y = mc->y_thrust;
+        target_x = mc->x_thrust*0.8;
+        target_y = mc->y_thrust*0.8;
         target_yaw -= mc->yaw_thrust * YAW_SENSI;
         target_pitch += mc->pitch_thrust * PITCH_SENSI;
         z_thrust = mc->z_thrust;
